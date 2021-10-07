@@ -1,3 +1,5 @@
 .idea/
 data.json
 config.py
+migrations
+venv
