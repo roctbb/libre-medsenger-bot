@@ -24,8 +24,13 @@ if __name__ == '__main__':
     driver_path = "/var/www/libre-medsenger-bot/drivers/chromedriver_linux"
     driver = webdriver.Chrome(executable_path=driver_path, options=options)
     print("Created driver")
+
+    driver.get("https://libre.medsenger.ru")
+    print(driver.page_source)
+
     enable_download_headless(driver, "/var/www/libre-medsenger-bot/downloads/")
     print("Enabled")
+
     driver.get("https://medsenger.ru/medsenger.pdf")
 
     time.sleep(3)
