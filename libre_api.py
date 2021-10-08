@@ -54,9 +54,12 @@ def create_client(headless=HEADLESS):
     driver.get("https://www.libreview.ru/")
     time.sleep(2)
 
-    driver.find_element_by_id("submit-button").click()
+    try:
+        driver.find_element_by_id("submit-button").click()
 
-    time.sleep(2)
+        time.sleep(2)
+    except:
+        pass
 
     driver.find_element_by_id("loginForm-email-input").send_keys(LIBRE_LOGIN)
     driver.find_element_by_id("loginForm-password-input").send_keys(LIBRE_PASS)
