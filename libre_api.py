@@ -34,9 +34,11 @@ def sentry(func):
 @sentry
 def create_driver(headless=HEADLESS):
     options = webdriver.ChromeOptions()
-    prefs = {"download.default_directory": DOWNLOAD_PATH, 'plugins.always_open_pdf_externally': True, "use_system_default_printer": False, "download.prompt_for_download": False, "download_restrictions": 0,
-             "profile.default_content_settings.popups": 0, "profile.default_content_setting_values.automatic_downloads": 1}
-    options.add_experimental_option("prefs", prefs)
+    # prefs = {"download.default_directory": DOWNLOAD_PATH, 'plugins.always_open_pdf_externally': True, "use_system_default_printer": False, "download.prompt_for_download": False, "download_restrictions": 0,
+    #          "profile.default_content_settings.popups": 0, "profile.default_content_setting_values.automatic_downloads": 1}
+    # options.add_experimental_option("prefs", prefs)
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option('useAutomationExtension', False)
 
     if headless:
         options.add_argument("--headless")
@@ -51,10 +53,8 @@ def create_driver(headless=HEADLESS):
 
     driver = webdriver.Chrome(executable_path=DRIVER, options=options)
 
-    driver.command_executor._commands["send_command"] = ("POST", '/session/$sessionId/chromium/send_command')
-    params = {'cmd': 'Page.setDownloadBehavior', 'params': {'behavior': 'allow', 'downloadPath': DOWNLOAD_PATH}}
-    command_result = driver.execute("send_command", params)
-    print(command_result)
+    params = {'behavior': 'allow', 'downloadPath': DOWNLOAD_PATH}
+    driver.execute_cdp_cmd('Page.setDownloadBehavior', params)
 
     return driver
 
@@ -291,3 +291,7 @@ def test_download():
     time.sleep(5)
 
     driver.close()
+
+if __name__ == "__main__":
+    test_browser()
+    test_download()
