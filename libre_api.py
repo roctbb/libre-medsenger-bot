@@ -210,6 +210,9 @@ def send_reports(contracts):
                                                       "К сожалению, при загрузке отчета FreeStyle Libre что-то пошло не так. Попробуйте отключить и заного подключить интеллектуального агента, а если не поможет - можно обратиться в техническую поддержку support@medsenger.ru",
                                                       only_doctor=True)
 
+                        with open('index.html', 'w') as df:
+                            df.write(driver.page_source)
+
                     driver.back()
                     driver.back()
                 else:
