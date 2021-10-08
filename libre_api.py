@@ -19,6 +19,7 @@ sentry_sdk.init(
     traces_sample_rate=0.0
 )
 
+
 def sentry(func):
     def wrapper(*args, **kargs):
         try:
@@ -29,10 +30,12 @@ def sentry(func):
     wrapper.__name__ = func.__name__
     return wrapper
 
+
 @sentry
 def create_driver(headless=HEADLESS):
     options = webdriver.ChromeOptions()
-    prefs = {"download.default_directory": DOWNLOAD_PATH, 'plugins.always_open_pdf_externally': True, "profile.default_content_settings.popups": 0}
+    prefs = {"download.default_directory": DOWNLOAD_PATH, 'plugins.always_open_pdf_externally': True, "use_system_default_printer": False, "download.prompt_for_download": False, "download_restrictions": 0,
+             "profile.default_content_settings.popups": 0, "profile.default_content_setting_values.automatic_downloads": 1}
     options.add_experimental_option("prefs", prefs)
 
     if headless:
@@ -47,6 +50,7 @@ def create_driver(headless=HEADLESS):
             options.add_argument("--window-size=1500,1200")
 
     return webdriver.Chrome(executable_path=DRIVER, options=options)
+
 
 @sentry
 def create_client(headless=HEADLESS):
@@ -74,6 +78,7 @@ def create_client(headless=HEADLESS):
 
     return driver
 
+
 @sentry
 def register_user(contract):
     driver = create_client()
@@ -84,7 +89,9 @@ def register_user(contract):
         name = cells[1].text + " " + cells[0].text
         birthday = cells[2].text
         if find_contract([contract], name, birthday):
-            medsenger_client.send_message(contract.id, "Пациент найден в базе LibreView для Вашего мед. учреждения. Теперь мы сможем ежедневно автоматически присылать Вам отчеты о мониторинге. Запросить отчет в произвольное время можно в меню Действия.", only_doctor=True)
+            medsenger_client.send_message(contract.id,
+                                          "Пациент найден в базе LibreView для Вашего мед. учреждения. Теперь мы сможем ежедневно автоматически присылать Вам отчеты о мониторинге. Запросить отчет в произвольное время можно в меню Действия.",
+                                          only_doctor=True)
             return "exists"
 
     driver.find_element_by_id('main-header-add-patient-button').click()
@@ -112,19 +119,21 @@ def register_user(contract):
     time.sleep(0.5)
     driver.close()
 
-    medsenger_client.send_message(contract.id, "Мы добавили информацию о пациенте в базу LibreView и запросили доступ к данным мониторинга. Как только пациент выдаст доступ, Вы будете автоматически получать ежедневные отчеты по мониторингу глюкозы в чат.", only_doctor=True)
-    medsenger_client.send_message(contract.id, "Мы запросили доступ к данным глюкометра FreeStyle Libre. Пожалуйста, проверьте электронную почту и предоставьте доступ. После этого Ваш врач сможет автоматически получать отчеты об уровне глюкозы.", only_patient=True)
+    medsenger_client.send_message(contract.id,
+                                  "Мы добавили информацию о пациенте в базу LibreView и запросили доступ к данным мониторинга. Как только пациент выдаст доступ, Вы будете автоматически получать ежедневные отчеты по мониторингу глюкозы в чат.",
+                                  only_doctor=True)
+    medsenger_client.send_message(contract.id,
+                                  "Мы запросили доступ к данным глюкометра FreeStyle Libre. Пожалуйста, проверьте электронную почту и предоставьте доступ. После этого Ваш врач сможет автоматически получать отчеты об уровне глюкозы.",
+                                  only_patient=True)
+
 
 @sentry
 def send_reports(contracts):
-
     contracts = list(contracts)
 
     driver = create_client()
 
-
     found_ids = []
-
 
     print("Got client")
 
@@ -229,10 +238,11 @@ def send_reports(contracts):
 
     for contract in contracts:
         medsenger_client.send_message(contract.id,
-                                          "Нам не удалось найти пациента в базе LibreView. Попробуйте отключить и заного подключить интеллектуального агента, а если не поможет - можно обратиться в техническую поддержку support@medsenger.ru",
-                                          only_doctor=True)
+                                      "Нам не удалось найти пациента в базе LibreView. Попробуйте отключить и заного подключить интеллектуального агента, а если не поможет - можно обратиться в техническую поддержку support@medsenger.ru",
+                                      only_doctor=True)
 
     driver.close()
+
 
 @sentry
 def find_contract(contracts, name, birthday):
@@ -240,6 +250,7 @@ def find_contract(contracts, name, birthday):
         if name in contract.name and contract.birthday == birthday:
             return contract
     return None
+
 
 @sentry
 def prepare_last_file():
@@ -252,6 +263,7 @@ def prepare_last_file():
             return prepared
     return None
 
+
 @sentry
 def test_browser():
     driver = create_driver(True)
@@ -262,6 +274,7 @@ def test_browser():
 
     driver.close()
 
+
 @sentry
 def test_download():
     driver = create_driver(True)
@@ -271,4 +284,3 @@ def test_download():
     time.sleep(5)
 
     driver.close()
-
