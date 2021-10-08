@@ -22,6 +22,7 @@ def create_driver(headless=HEADLESS):
             options.add_argument("--disable-gpu")
             options.add_argument("--no-sandbox")  # linux only
             options.add_argument("--disable-dev-shm-usage")
+            options.add_argument("--remote-debugging-port=9222")
 
     return webdriver.Chrome(executable_path=DRIVER, options=options)
 
