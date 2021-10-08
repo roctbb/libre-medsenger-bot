@@ -186,7 +186,11 @@ def send_reports(contracts):
 
                     driver.find_element_by_id("26-reportSetting-interval-select").send_keys('1\n')
 
-                    # driver.find_element_by_id("save-Button").click()
+                    try:
+                        driver.find_element_by_id("save-Button").click()
+                        print("clicked")
+                    except:
+                        pass
 
                     time.sleep(3)
 
