@@ -124,6 +124,8 @@ def register_user(contract):
     time.sleep(0.5)
     driver.find_element_by_id("add-patient-modal-send-button").click()
     time.sleep(0.5)
+
+
     driver.quit()
 
     medsenger_client.send_message(contract.id,
@@ -233,6 +235,7 @@ def send_reports(contracts):
                     driver.back()
                     driver.back()
                 else:
+                    print(status, name, birthday)
                     medsenger_client.send_message(contract.id, "Ошибка экспорта отчета FreeStyleLibre: пациент еще не открыл доступ к данным.", only_doctor=True)
 
                 contracts.remove(contract)
