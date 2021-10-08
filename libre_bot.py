@@ -94,7 +94,7 @@ def get_report(args, form):
 def message(data):
     return "ok"
 
-def sender():
+def sender(app):
     with app.app_context():
         libre_api.send_reports(Contract.query.all())
 
