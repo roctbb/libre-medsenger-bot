@@ -34,9 +34,9 @@ def sentry(func):
 @sentry
 def create_driver(headless=HEADLESS):
     options = webdriver.ChromeOptions()
-    # prefs = {"download.default_directory": DOWNLOAD_PATH, 'plugins.always_open_pdf_externally': True, "use_system_default_printer": False, "download.prompt_for_download": False, "download_restrictions": 0,
-    #          "profile.default_content_settings.popups": 0, "profile.default_content_setting_values.automatic_downloads": 1}
-    # options.add_experimental_option("prefs", prefs)
+    prefs = {"download.default_directory": DOWNLOAD_PATH, 'plugins.always_open_pdf_externally': True, "use_system_default_printer": False, "download.prompt_for_download": False, "download_restrictions": 0,
+              "profile.default_content_settings.popups": 0, "profile.default_content_setting_values.automatic_downloads": 1}
+    options.add_experimental_option("prefs", prefs)
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option('useAutomationExtension', False)
 
