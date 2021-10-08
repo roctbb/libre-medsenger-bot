@@ -21,12 +21,12 @@ if __name__ == '__main__':
     options.add_argument('--disable-gpu')
     options.add_argument('--disable-software-rasterizer')
     options.add_argument('--headless')
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--remote-debugging-port=9222")
+
     driver_path = "/var/www/libre-medsenger-bot/drivers/chromedriver_linux"
     driver = webdriver.Chrome(executable_path=driver_path, options=options)
     print("Created driver")
-
-    driver.get("https://libre.medsenger.ru")
-    print(driver.page_source)
 
     enable_download_headless(driver, "/var/www/libre-medsenger-bot/downloads/")
     print("Enabled")
