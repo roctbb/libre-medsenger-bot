@@ -124,7 +124,7 @@ def register_user(contract):
     time.sleep(0.5)
     driver.find_element_by_id("add-patient-modal-send-button").click()
     time.sleep(0.5)
-    driver.close()
+    driver.quit()
 
     medsenger_client.send_message(contract.id,
                                   "Мы добавили информацию о пациенте в базу LibreView и запросили доступ к данным мониторинга. Как только пациент выдаст доступ, Вы будете автоматически получать ежедневные отчеты по мониторингу глюкозы в чат.",
@@ -248,7 +248,7 @@ def send_reports(contracts):
                                       "Нам не удалось найти пациента в базе LibreView. Попробуйте отключить и заного подключить интеллектуального агента, а если не поможет - можно обратиться в техническую поддержку support@medsenger.ru",
                                       only_doctor=True)
 
-    driver.close()
+    driver.quit()
 
 
 @sentry
@@ -279,7 +279,7 @@ def test_browser():
 
     print(driver.page_source)
 
-    driver.close()
+    driver.quit()
 
 
 @sentry
@@ -290,7 +290,7 @@ def test_download():
 
     time.sleep(5)
 
-    driver.close()
+    driver.quit()
 
 if __name__ == "__main__":
     test_browser()
