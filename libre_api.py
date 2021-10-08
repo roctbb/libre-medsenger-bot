@@ -236,6 +236,7 @@ def find_contract(contracts, name, birthday):
 @sentry
 def prepare_last_file():
     for file in os.listdir(DOWNLOAD_PATH):
+        print(file)
         if '.pdf' in file:
             prepared = prepare_file(DOWNLOAD_PATH + os.sep + file)
             os.remove(DOWNLOAD_PATH + os.sep + file)
