@@ -9,8 +9,7 @@ import os
 
 medsenger_client = AgentApiClient(host=MAIN_HOST, api_key=API_KEY, debug=API_DEBUG)
 
-
-def create_client(headless=HEADLESS):
+def create_driver(headless=HEADLESS):
     options = webdriver.ChromeOptions()
     prefs = {"download.default_directory": DOWNLOAD_PATH}
     options.add_experimental_option("prefs", prefs)
@@ -23,7 +22,10 @@ def create_client(headless=HEADLESS):
             options.add_argument("--disable-gpu")
             options.add_argument("--no-sandbox")  # linux only
 
-    driver = webdriver.Chrome(executable_path=DRIVER, options=options)
+    return webdriver.Chrome(executable_path=DRIVER, options=options)
+
+def create_client(headless=HEADLESS):
+    driver = create_driver(headless)
 
     driver.get("https://www.libreview.ru/")
     time.sleep(2)
@@ -182,3 +184,10 @@ def prepare_last_file():
 
             return prepared
     return None
+
+def test_browser():
+    driver = create_driver(True)
+
+    driver.get("https://cardio.medsenger.ru")
+
+    print(driver.page_source)
