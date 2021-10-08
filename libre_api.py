@@ -32,7 +32,7 @@ def sentry(func):
 @sentry
 def create_driver(headless=HEADLESS):
     options = webdriver.ChromeOptions()
-    prefs = {"download.default_directory": DOWNLOAD_PATH}
+    prefs = {"download.default_directory": DOWNLOAD_PATH, 'plugins.always_open_pdf_externally': True, "profile.default_content_settings.popups": 0}
     options.add_experimental_option("prefs", prefs)
 
     if headless:
@@ -44,6 +44,7 @@ def create_driver(headless=HEADLESS):
             options.add_argument("--no-sandbox")  # linux only
             options.add_argument("--disable-dev-shm-usage")
             options.add_argument("--remote-debugging-port=9222")
+            options.add_argument("--window-size=1500,1200")
 
     return webdriver.Chrome(executable_path=DRIVER, options=options)
 
