@@ -4,11 +4,31 @@ from selenium.webdriver.common.action_chains import ActionChains
 from medsenger_api import AgentApiClient, prepare_file
 from selenium.webdriver.support.ui import Select
 from config import *
+import sentry_sdk
+
 import time
 import os
 
 medsenger_client = AgentApiClient(host=MAIN_HOST, api_key=API_KEY, debug=API_DEBUG)
+sentry_sdk.init(
+    dsn=SENTRY_DSN,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production.
+    traces_sample_rate=1.0
+)
 
+def sentry(func):
+    def wrapper(*args, **kargs):
+        try:
+            return func(*args, **kargs)
+        except Exception as e:
+            sentry_sdk.capture_exception(e)
+
+    wrapper.__name__ = func.__name__
+    return wrapper
+
+@sentry
 def create_driver(headless=HEADLESS):
     options = webdriver.ChromeOptions()
     prefs = {"download.default_directory": DOWNLOAD_PATH}
@@ -26,6 +46,7 @@ def create_driver(headless=HEADLESS):
 
     return webdriver.Chrome(executable_path=DRIVER, options=options)
 
+@sentry
 def create_client(headless=HEADLESS):
     driver = create_driver(headless)
 
@@ -48,6 +69,7 @@ def create_client(headless=HEADLESS):
 
     return driver
 
+@sentry
 def register_user(contract):
     driver = create_client()
     table = driver.find_element_by_tag_name('tbody')
@@ -88,7 +110,7 @@ def register_user(contract):
     medsenger_client.send_message(contract.id, "Мы добавили информацию о пациенте в базу LibreView и запросили доступ к данным мониторинга. Как только пациент выдаст доступ, Вы будете автоматически получать ежедневные отчеты по мониторингу глюкозы в чат.", only_doctor=True)
     medsenger_client.send_message(contract.id, "Мы запросили доступ к данным глюкометра FreeStyle Libre. Пожалуйста, проверьте электронную почту и предоставьте доступ. После этого Ваш врач сможет автоматически получать отчеты об уровне глюкозы.", only_patient=True)
 
-
+@sentry
 def send_reports(contracts):
     driver = create_client()
 
@@ -189,14 +211,14 @@ def send_reports(contracts):
 
     driver.close()
 
-
+@sentry
 def find_contract(contracts, name, birthday):
     for contract in contracts:
         if name in contract.name and contract.birthday == birthday:
             return contract
     return None
 
-
+@sentry
 def prepare_last_file():
     for file in os.listdir(DOWNLOAD_PATH):
         if '.pdf' in file:
@@ -206,6 +228,7 @@ def prepare_last_file():
             return prepared
     return None
 
+@sentry
 def test_browser():
     driver = create_driver(True)
 

@@ -7,8 +7,21 @@ from manage import *
 from medsenger_api import AgentApiClient
 from helpers import *
 from models import *
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
 
 medsenger_api = AgentApiClient(API_KEY, MAIN_HOST, AGENT_ID, API_DEBUG)
+
+sentry_sdk.init(
+    dsn=SENTRY_DSN,
+    integrations=[FlaskIntegration()],
+
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production.
+    traces_sample_rate=1.0
+)
+
 
 
 @app.route('/')

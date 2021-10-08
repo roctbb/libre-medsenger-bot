@@ -15,4 +15,4 @@ DOWNLOAD_PATH="/Users/roctbb/PycharmProjects/libre-medsenger-bot/downloads"
 DRIVER = "drivers/chromedriver_mac"
 HEADLESS = False
 CLINIC_NAME = "ТлеПат"
-
+SENTRY_DSN = ""
