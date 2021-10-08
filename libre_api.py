@@ -260,9 +260,15 @@ def test_browser():
 
     print(driver.page_source)
 
+    driver.close()
+
 @sentry
 def test_download():
     driver = create_driver(True)
 
     driver.get("https://medsenger.ru/medsenger.pdf")
+
+    time.sleep(5)
+
+    driver.close()
 
