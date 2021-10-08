@@ -83,7 +83,7 @@ def register_user(contract):
         name = cells[1].text + " " + cells[0].text
         birthday = cells[2].text
         if find_contract([contract], name, birthday):
-            medsenger_client.send_message(contract.id, "Пациент найден в базе LibreView для Вашего мед. учреждения. Теперь мы сможем ежедневно автоматически присылать Вам отчеты о мониторинге. Если Вы захотите запросить отчет в произвольное время можно в меню Действия.", only_doctor=True)
+            medsenger_client.send_message(contract.id, "Пациент найден в базе LibreView для Вашего мед. учреждения. Теперь мы сможем ежедневно автоматически присылать Вам отчеты о мониторинге. Запросить отчет в произвольное время можно в меню Действия.", only_doctor=True)
             return "exists"
 
     driver.find_element_by_id('main-header-add-patient-button').click()
@@ -116,101 +116,112 @@ def register_user(contract):
 
 @sentry
 def send_reports(contracts):
+
+    contracts = list(contracts)
+
     driver = create_client()
+
 
     found_ids = []
 
+
     print("Got client")
 
-    table = driver.find_element_by_tag_name('tbody')
-    print("Got table")
+    while True:
+        continue_search = False
+        table = driver.find_element_by_tag_name('tbody')
+        print("Got table")
 
-    for row in table.find_elements_by_tag_name('tr'):
-        cells = row.find_elements_by_tag_name('td')
+        for row in table.find_elements_by_tag_name('tr'):
+            cells = row.find_elements_by_tag_name('td')
 
-        name = cells[1].text + " " + cells[0].text
-        birthday = cells[2].text
+            name = cells[1].text + " " + cells[0].text
+            birthday = cells[2].text
 
-        status = cells[7]
-        contract = find_contract(contracts, name, birthday)
+            status = cells[7]
+            contract = find_contract(contracts, name, birthday)
 
-        print("Found contract")
+            if contract:
+                print("Found contract")
 
-        if contract:
-            if status.text == "Подключено":
-                cells[0].click()
+                if status.text == "Подключено":
+                    cells[0].click()
 
-                time.sleep(1)
+                    time.sleep(1)
 
-                driver.find_element_by_id("interval-select").send_keys("1\n")
-                driver.find_element_by_id("pastGlucoseCard-report-button").click()
+                    driver.find_element_by_id("interval-select").send_keys("1\n")
+                    driver.find_element_by_id("pastGlucoseCard-report-button").click()
 
-                time.sleep(3)
+                    time.sleep(3)
 
-                driver.find_element_by_id("launch-reports-settings-button").click()
+                    driver.find_element_by_id("launch-reports-settings-button").click()
 
-                time.sleep(1)
+                    time.sleep(1)
 
-                checkboxes = ['20-reportSetting-toggle-checkbox', '16-reportSetting-toggle-checkbox', '5-reportSetting-toggle-checkbox',
-                              '1-reportSetting-toggle-checkbox', '8-reportSetting-toggle-checkbox', '10-reportSetting-toggle-checkbox',
-                              '18-reportSetting-toggle-checkbox', '14-reportSetting-toggle-checkbox']
+                    checkboxes = ['20-reportSetting-toggle-checkbox', '16-reportSetting-toggle-checkbox', '5-reportSetting-toggle-checkbox',
+                                  '1-reportSetting-toggle-checkbox', '8-reportSetting-toggle-checkbox', '10-reportSetting-toggle-checkbox',
+                                  '18-reportSetting-toggle-checkbox', '14-reportSetting-toggle-checkbox']
 
-                for checkbox in checkboxes:
-                    elmt = driver.find_element_by_id(checkbox)
+                    for checkbox in checkboxes:
+                        elmt = driver.find_element_by_id(checkbox)
 
-                    if elmt.get_attribute('checked'):
-                        driver.execute_script("arguments[0].click();", elmt)
+                        if elmt.get_attribute('checked'):
+                            driver.execute_script("arguments[0].click();", elmt)
 
-                driver.find_element_by_id("threshold-targetLow-input").clear()
-                driver.find_element_by_id("threshold-targetLow-input").send_keys(str(contract.yellow_bottom).replace('.', ','))
-                driver.find_element_by_id("threshold-targetLow-input").send_keys(Keys.TAB)
+                    driver.find_element_by_id("threshold-targetLow-input").clear()
+                    driver.find_element_by_id("threshold-targetLow-input").send_keys(str(contract.yellow_bottom).replace('.', ','))
+                    driver.find_element_by_id("threshold-targetLow-input").send_keys(Keys.TAB)
 
-                actions = ActionChains(driver)
-                actions.send_keys(str(contract.yellow_top).replace('.', ','))
-                actions.send_keys(Keys.TAB)
+                    actions = ActionChains(driver)
+                    actions.send_keys(str(contract.yellow_top).replace('.', ','))
+                    actions.send_keys(Keys.TAB)
 
-                actions.send_keys(str(contract.red_bottom).replace('.', ','))
-                actions.send_keys(Keys.TAB)
+                    actions.send_keys(str(contract.red_bottom).replace('.', ','))
+                    actions.send_keys(Keys.TAB)
 
-                actions.send_keys(str(contract.red_top).replace('.', ','))
-                actions.send_keys(Keys.TAB)
+                    actions.send_keys(str(contract.red_top).replace('.', ','))
+                    actions.send_keys(Keys.TAB)
 
-                actions.perform()
+                    actions.perform()
 
-                driver.find_element_by_id("26-reportSetting-interval-select").send_keys('1\n')
+                    driver.find_element_by_id("26-reportSetting-interval-select").send_keys('1\n')
 
-                # driver.find_element_by_id("save-Button").click()
+                    # driver.find_element_by_id("save-Button").click()
 
-                time.sleep(3)
+                    time.sleep(3)
 
-                driver.execute_script("arguments[0].click();", driver.find_element_by_id("reports-print-button"))
+                    driver.execute_script("arguments[0].click();", driver.find_element_by_id("reports-print-button"))
 
-                time.sleep(15)
+                    time.sleep(15)
 
-                file = prepare_last_file()
+                    file = prepare_last_file()
 
-                if file:
-                    print("Got report")
-                    attachments = [file]
-                    medsenger_client.send_message(contract.id, "Отчет FreeStyleLibre", send_from='patient',
-                                                  attachments=attachments)
+                    if file:
+                        print("Got report")
+                        attachments = [file]
+                        medsenger_client.send_message(contract.id, "Отчет FreeStyleLibre", send_from='patient',
+                                                      attachments=attachments)
+                    else:
+                        medsenger_client.send_message(contract.id,
+                                                      "К сожалению, при загрузке отчета FreeStyle Libre что-то пошло не так. Попробуйте отключить и заного подключить интеллектуального агента, а если не поможет - можно обратиться в техническую поддержку support@medsenger.ru",
+                                                      only_doctor=True)
 
-                    found_ids.append(contract.id)
-
+                    driver.back()
+                    driver.back()
                 else:
-                    medsenger_client.send_message(contract.id,
-                                                  "К сожалению, при загрузке отчета FreeStyle Libre что-то пошло не так. Попробуйте отключить и заного подключить интеллектуального агента, а если не поможет - можно обратиться в технчиескую поддержку support@medsenger.ru",
-                                                  only_doctor=True)
+                    medsenger_client.send_message(contract.id, "Ошибка экспорта отчета FreeStyleLibre: пациент еще не открыл доступ к данным.", only_doctor=True)
 
-                driver.back()
-                driver.back()
-            else:
-                medsenger_client.send_message(contract.id, "Ошибка экспорта отчета FreeStyleLibre: пациент еще не открыл доступ к данным.", only_doctor=True)
+                contracts.remove(contract)
 
-    for  contract in contracts:
-        if contract.id not in found_ids:
-            medsenger_client.send_message(contract.id,
-                                          "Нам не удалось найти пациента в базе LibreView. Попробуйте отключить и заного подключить интеллектуального агента, а если не поможет - можно обратиться в технчиескую поддержку support@medsenger.ru",
+                continue_search = True
+                break
+
+        if not continue_search:
+            break
+
+    for contract in contracts:
+        medsenger_client.send_message(contract.id,
+                                          "Нам не удалось найти пациента в базе LibreView. Попробуйте отключить и заного подключить интеллектуального агента, а если не поможет - можно обратиться в техническую поддержку support@medsenger.ru",
                                           only_doctor=True)
 
     driver.close()
