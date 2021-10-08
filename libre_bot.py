@@ -86,7 +86,7 @@ def get_report(args, form):
     T = threading.Thread(target=lambda:libre_api.send_reports([contract]))
     T.start()
 
-    return "Запущен процесс создания отчет, он придет в чат через минуту."
+    return "Запущен процесс создания отчета, он придет в чат через минуту."
 
 
 @app.route('/message', methods=['POST'])
