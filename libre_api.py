@@ -57,6 +57,7 @@ def register_user(contract):
         name = cells[1].text + " " + cells[0].text
         birthday = cells[2].text
         if find_contract([contract], name, birthday):
+            medsenger_client.send_message(contract.id, "Пациент найден в базе LibreView для Вашего мед. учреждения. Теперь мы сможем ежедневно автоматически присылать Вам отчеты о мониторинге. Если Вы захотите запросить отчет в произвольное время можно в меню Действия.", only_doctor=True)
             return "exists"
 
     driver.find_element_by_id('main-header-add-patient-button').click()
@@ -84,10 +85,14 @@ def register_user(contract):
     time.sleep(0.5)
     driver.close()
 
-    return "added"
+    medsenger_client.send_message(contract.id, "Мы добавили информацию о пациенте в базу LibreView и запросили доступ к данным мониторинга. Как только пациент выдаст доступ, Вы будете автоматически получать ежедневные отчеты по мониторингу глюкозы в чат.", only_doctor=True)
+    medsenger_client.send_message(contract.id, "Мы запросили доступ к данным глюкометра FreeStyle Libre. Пожалуйста, проверьте электронную почту и предоставьте доступ. После этого Ваш врач сможет автоматически получать отчеты об уровне глюкозы.", only_patient=True)
+
 
 def send_reports(contracts):
     driver = create_client()
+
+    found_ids = []
 
     print("Got client")
 
@@ -164,10 +169,24 @@ def send_reports(contracts):
                     medsenger_client.send_message(contract.id, "Отчет FreeStyleLibre", send_from='patient',
                                                   attachments=attachments)
 
+                    found_ids.append(contract.id)
+
+                else:
+                    medsenger_client.send_message(contract.id,
+                                                  "К сожалению, при загрузке отчета FreeStyle Libre что-то пошло не так. Попробуйте отключить и заного подключить интеллектуального агента, а если не поможет - можно обратиться в технчиескую поддержку support@medsenger.ru",
+                                                  only_doctor=True)
+
                 driver.back()
                 driver.back()
             else:
-                medsenger_client.send_message(contract.id, "Ошибка экспорта отчета FreeStyleLibre: пациент еще не открыл доступ к данным.", send_from='patient', only_doctor=True)
+                medsenger_client.send_message(contract.id, "Ошибка экспорта отчета FreeStyleLibre: пациент еще не открыл доступ к данным.", only_doctor=True)
+
+    for  contract in contracts:
+        if contract.id not in found_ids:
+            medsenger_client.send_message(contract.id,
+                                          "Нам не удалось найти пациента в базе LibreView. Попробуйте отключить и заного подключить интеллектуального агента, а если не поможет - можно обратиться в технчиескую поддержку support@medsenger.ru",
+                                          only_doctor=True)
+
     driver.close()
 
 

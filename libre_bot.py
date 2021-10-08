@@ -60,8 +60,6 @@ def init(data):
     T = threading.Thread(target=lambda:libre_api.register_user(contract))
     T.start()
 
-
-
     return "ok"
 
 
