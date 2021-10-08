@@ -183,7 +183,7 @@ def send_reports(contracts):
 
                 time.sleep(3)
 
-                driver.find_element_by_id("reports-print-button").click()
+                driver.execute_script("arguments[0].click();", driver.find_element_by_id("reports-print-button"))
 
                 time.sleep(15)
 
