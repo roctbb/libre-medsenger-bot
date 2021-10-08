@@ -21,6 +21,7 @@ def create_driver(headless=HEADLESS):
             options.add_argument("--disable-extensions")
             options.add_argument("--disable-gpu")
             options.add_argument("--no-sandbox")  # linux only
+            options.add_argument("--disable-dev-shm-usage")
 
     return webdriver.Chrome(executable_path=DRIVER, options=options)
 
