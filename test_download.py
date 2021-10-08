@@ -22,7 +22,7 @@ if __name__ == '__main__':
     options.add_argument('--disable-software-rasterizer')
     options.add_argument('--headless')
     driver_path = "/var/www/libre-medsenger-bot/drivers/chromedriver_linux"
-    driver = webdriver.Chrome(driver_path, options=options)
+    driver = webdriver.Chrome(executable_path=driver_path, options=options)
     print("Created driver")
     enable_download_headless(driver, "/var/www/libre-medsenger-bot/downloads/")
     print("Enabled")
