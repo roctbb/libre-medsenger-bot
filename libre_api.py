@@ -192,9 +192,9 @@ def send_reports(contracts):
                     except:
                         pass
 
-                    time.sleep(3)
+                    time.sleep(4)
 
-                    driver.execute_script("arguments[0].click();", driver.find_element_by_id("reports-print-button"))
+                    driver.find_element_by_id("reports-print-button").click()
 
                     time.sleep(15)
 
