@@ -16,6 +16,11 @@ sentry_sdk.init(
     traces_sample_rate=0.0,
 )
 
+try:
+    1/0
+except Exception as e:
+    sentry_sdk.capture_exception(e)
+
 app = Flask(__name__)
 db_string = "postgresql://{}:{}@{}:{}/{}".format(DB_LOGIN, DB_PASSWORD, DB_HOST, DB_PORT, DB_DATABASE)
 app.config['SQLALCHEMY_DATABASE_URI'] = db_string
