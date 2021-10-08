@@ -259,3 +259,10 @@ def test_browser():
     driver.get("https://cardio.medsenger.ru")
 
     print(driver.page_source)
+
+@sentry
+def test_download():
+    driver = create_driver(True)
+
+    driver.get("https://medsenger.ru/medsenger.pdf")
+
