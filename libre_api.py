@@ -49,7 +49,14 @@ def create_driver(headless=HEADLESS):
             options.add_argument("--remote-debugging-port=9222")
             options.add_argument("--window-size=1500,1200")
 
-    return webdriver.Chrome(executable_path=DRIVER, options=options)
+    driver = webdriver.Chrome(executable_path=DRIVER, options=options)
+
+    driver.command_executor._commands["send_command"] = ("POST", '/session/$sessionId/chromium/send_command')
+    params = {'cmd': 'Page.setDownloadBehavior', 'params': {'behavior': 'allow', 'downloadPath': DOWNLOAD_PATH}}
+    command_result = driver.execute("send_command", params)
+    print(command_result)
+
+    return driver
 
 
 @sentry
