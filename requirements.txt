@@ -8,3 +8,5 @@ Flask-Script
 sentry-sdk[flask]
 selenium
 pytest
+rq
+redis

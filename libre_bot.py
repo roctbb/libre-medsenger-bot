@@ -4,7 +4,12 @@ from medsenger_api import AgentApiClient
 from helpers import *
 from models import *
 
+from rq import Queue
+from libre_queue import conn
+
+q = Queue('libre', connection=conn)
 medsenger_api = AgentApiClient(API_KEY, MAIN_HOST, AGENT_ID, API_DEBUG)
+
 
 @app.route('/debug-sentry')
 def trigger_error():
@@ -56,8 +61,11 @@ def init(data):
 
     contract = Contract.query.filter_by(id=data.get('contract_id')).first()
 
-    T = threading.Thread(target=lambda:libre_api.register_user(contract))
-    T.start()
+    job = q.enqueue_call(
+        func=libre_api.register_user, args=(contract, ), result_ttl=5000
+    )
+
+    print(job.get_id())
 
     return "ok"
 
@@ -82,9 +90,11 @@ def get_settings(args, form):
 def get_report(args, form):
     contract = Contract.query.filter_by(id=args.get('contract_id')).first()
 
+    job = q.enqueue_call(
+        func=libre_api.send_reports, args=([contract], ), result_ttl=5000
+    )
 
-    T = threading.Thread(target=lambda:libre_api.send_reports([contract]))
-    T.start()
+    print(job.get_id())
 
     return "Запущен процесс создания отчета, он придет в чат через минуту."
 
@@ -96,7 +106,11 @@ def message(data):
 
 def sender(app):
     with app.app_context():
-        libre_api.send_reports(Contract.query.all())
+        job = q.enqueue_call(
+            func=libre_api.send_reports, args=(Contract.query.all(),), result_ttl=5000
+        )
+
+        print(job.get_id())
 
 if __name__ == "__main__":
     app.run(HOST, PORT, debug=API_DEBUG)

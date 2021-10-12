@@ -3,6 +3,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from medsenger_api import AgentApiClient, prepare_file
 from selenium.webdriver.support.ui import Select
+from sentry_sdk.integrations.rq import RqIntegration
 from config import *
 import sentry_sdk
 
@@ -10,32 +11,15 @@ import time
 import os
 
 medsenger_client = AgentApiClient(host=MAIN_HOST, api_key=API_KEY, debug=API_DEBUG)
-
-sentry_sdk.init(
-    dsn=SENTRY_DSN,
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    # We recommend adjusting this value in production.
-    traces_sample_rate=0.0
-)
+sentry_sdk.init(dsn=SENTRY_DSN, traces_sample_rate=0.0)
 
 
-def sentry(func):
-    def wrapper(*args, **kargs):
-        try:
-            return func(*args, **kargs)
-        except Exception as e:
-            sentry_sdk.capture_exception(e)
-
-    wrapper.__name__ = func.__name__
-    return wrapper
-
-
-@sentry
 def create_driver(headless=HEADLESS):
     options = webdriver.ChromeOptions()
-    prefs = {"download.default_directory": DOWNLOAD_PATH, 'plugins.always_open_pdf_externally': True, "use_system_default_printer": False, "download.prompt_for_download": False, "download_restrictions": 0,
-              "profile.default_content_settings.popups": 0, "profile.default_content_setting_values.automatic_downloads": 1}
+    prefs = {"download.default_directory": DOWNLOAD_PATH, 'plugins.always_open_pdf_externally': True,
+             "use_system_default_printer": False, "download.prompt_for_download": False, "download_restrictions": 0,
+             "profile.default_content_settings.popups": 0,
+             "profile.default_content_setting_values.automatic_downloads": 1}
     options.add_experimental_option("prefs", prefs)
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option('useAutomationExtension', False)
@@ -58,11 +42,8 @@ def create_driver(headless=HEADLESS):
 
     return driver
 
-
-@sentry
-def create_client(headless=HEADLESS):
-    driver = create_driver(headless)
-
+def create_client():
+    driver = create_driver()
     driver.get("https://www.libreview.ru/")
     time.sleep(2)
 
@@ -73,11 +54,14 @@ def create_client(headless=HEADLESS):
     except:
         pass
 
-    driver.find_element_by_id("loginForm-email-input").send_keys(LIBRE_LOGIN)
-    driver.find_element_by_id("loginForm-password-input").send_keys(LIBRE_PASS)
-    driver.find_element_by_id("loginForm-submit-button").click()
+    try:
+        driver.find_element_by_id("loginForm-email-input").send_keys(LIBRE_LOGIN)
+        driver.find_element_by_id("loginForm-password-input").send_keys(LIBRE_PASS)
+        driver.find_element_by_id("loginForm-submit-button").click()
 
-    time.sleep(1)
+        time.sleep(1)
+    except:
+        pass
 
     driver.find_element_by_id("main-header-dashboard-icon").click()
 
@@ -85,48 +69,50 @@ def create_client(headless=HEADLESS):
 
     return driver
 
-
-@sentry
 def register_user(contract):
-    driver = create_client()
-    table = driver.find_element_by_tag_name('tbody')
+    client = create_client()
 
-    for row in table.find_elements_by_tag_name('tr'):
-        cells = row.find_elements_by_tag_name('td')
-        name = cells[1].text + " " + cells[0].text
-        birthday = cells[2].text
-        if find_contract([contract], name, birthday):
-            medsenger_client.send_message(contract.id,
-                                          "Пациент найден в базе LibreView для Вашего мед. учреждения. Теперь мы сможем ежедневно автоматически присылать Вам отчеты о мониторинге. Запросить отчет в произвольное время можно в меню Действия.",
-                                          only_doctor=True)
-            return "exists"
+    try:
+        table = client.find_element_by_tag_name('tbody')
 
-    driver.find_element_by_id('main-header-add-patient-button').click()
+        for row in table.find_elements_by_tag_name('tr'):
+            cells = row.find_elements_by_tag_name('td')
+            name = cells[1].text + " " + cells[0].text
+            birthday = cells[2].text
+            if find_contract([contract], name, birthday):
+                medsenger_client.send_message(contract.id,
+                                              "Пациент найден в базе LibreView для Вашего мед. учреждения. Теперь мы сможем ежедневно автоматически присылать Вам отчеты о мониторинге. Запросить отчет в произвольное время можно в меню Действия.",
+                                              only_doctor=True)
+                return "exists"
 
-    time.sleep(1)
+        client.find_element_by_id('main-header-add-patient-button').click()
 
-    surname, name, *args = contract.name.split()
+        time.sleep(1)
 
-    D, M, Y = contract.birthday.split('/')
+        surname, name, *args = contract.name.split()
 
-    driver.find_element_by_id("add-patient-firstName-field").send_keys(name)
-    driver.find_element_by_id("add-patient-lastName-field").send_keys(surname)
+        D, M, Y = contract.birthday.split('/')
 
-    Select(driver.find_element_by_id("add-patient-dob-month-select")).select_by_value(M)
+        client.find_element_by_id("add-patient-firstName-field").send_keys(name)
+        client.find_element_by_id("add-patient-lastName-field").send_keys(surname)
 
-    driver.find_element_by_id("add-patient-dob-day").send_keys(D)
-    driver.find_element_by_id("add-patient-dob-year").send_keys(Y)
+        Select(client.find_element_by_id("add-patient-dob-month-select")).select_by_value(M)
 
-    driver.find_element_by_id("add-patient-email-input").send_keys(contract.email)
-    Select(driver.find_element_by_id("add-patient-practice-select")).select_by_visible_text(CLINIC_NAME)
+        client.find_element_by_id("add-patient-dob-day").send_keys(D)
+        client.find_element_by_id("add-patient-dob-year").send_keys(Y)
 
-    driver.find_element_by_id("add-patient-modal-save-button").click()
-    time.sleep(0.5)
-    driver.find_element_by_id("add-patient-modal-send-button").click()
-    time.sleep(0.5)
+        client.find_element_by_id("add-patient-email-input").send_keys(contract.email)
+        Select(client.find_element_by_id("add-patient-practice-select")).select_by_visible_text(CLINIC_NAME)
 
-
-    driver.quit()
+        client.find_element_by_id("add-patient-modal-save-button").click()
+        time.sleep(0.5)
+        client.find_element_by_id("add-patient-modal-send-button").click()
+        time.sleep(0.5)
+    except Exception as e:
+        client.quit()
+        raise e
+    finally:
+        client.quit()
 
     medsenger_client.send_message(contract.id,
                                   "Мы добавили информацию о пациенте в базу LibreView и запросили доступ к данным мониторинга. Как только пациент выдаст доступ, Вы будете автоматически получать ежедневные отчеты по мониторингу глюкозы в чат.",
@@ -135,134 +121,136 @@ def register_user(contract):
                                   "Мы запросили доступ к данным глюкометра FreeStyle Libre. Пожалуйста, проверьте электронную почту и предоставьте доступ. После этого Ваш врач сможет автоматически получать отчеты об уровне глюкозы.",
                                   only_patient=True)
 
-
-@sentry
 def send_reports(contracts):
-    contracts = list(contracts)
+    client = create_client()
 
-    driver = create_client()
+    try:
+        contracts = list(contracts)
 
-    found_ids = []
+        print("Got client")
 
-    print("Got client")
+        while True:
+            continue_search = False
+            table = client.find_element_by_tag_name('tbody')
+            print("Got table")
 
-    while True:
-        continue_search = False
-        table = driver.find_element_by_tag_name('tbody')
-        print("Got table")
+            for row in table.find_elements_by_tag_name('tr'):
+                cells = row.find_elements_by_tag_name('td')
 
-        for row in table.find_elements_by_tag_name('tr'):
-            cells = row.find_elements_by_tag_name('td')
+                name = cells[1].text + " " + cells[0].text
+                birthday = cells[2].text
 
-            name = cells[1].text + " " + cells[0].text
-            birthday = cells[2].text
+                status = cells[7]
+                contract = find_contract(contracts, name, birthday)
 
-            status = cells[7]
-            contract = find_contract(contracts, name, birthday)
+                if contract:
+                    print("Found contract")
 
-            if contract:
-                print("Found contract")
+                    if status.text == "Подключено":
+                        cells[0].click()
 
-                if status.text == "Подключено":
-                    cells[0].click()
+                        time.sleep(1)
 
-                    time.sleep(1)
+                        client.find_element_by_id("interval-select").send_keys("1\n")
+                        client.find_element_by_id("pastGlucoseCard-report-button").click()
 
-                    driver.find_element_by_id("interval-select").send_keys("1\n")
-                    driver.find_element_by_id("pastGlucoseCard-report-button").click()
+                        time.sleep(3)
 
-                    time.sleep(3)
+                        client.find_element_by_id("launch-reports-settings-button").click()
 
-                    driver.find_element_by_id("launch-reports-settings-button").click()
+                        time.sleep(1)
 
-                    time.sleep(1)
+                        checkboxes = ['20-reportSetting-toggle-checkbox', '16-reportSetting-toggle-checkbox',
+                                      '5-reportSetting-toggle-checkbox',
+                                      '1-reportSetting-toggle-checkbox', '8-reportSetting-toggle-checkbox',
+                                      '10-reportSetting-toggle-checkbox',
+                                      '18-reportSetting-toggle-checkbox', '14-reportSetting-toggle-checkbox']
 
-                    checkboxes = ['20-reportSetting-toggle-checkbox', '16-reportSetting-toggle-checkbox', '5-reportSetting-toggle-checkbox',
-                                  '1-reportSetting-toggle-checkbox', '8-reportSetting-toggle-checkbox', '10-reportSetting-toggle-checkbox',
-                                  '18-reportSetting-toggle-checkbox', '14-reportSetting-toggle-checkbox']
+                        for checkbox in checkboxes:
+                            elmt = client.find_element_by_id(checkbox)
 
-                    for checkbox in checkboxes:
-                        elmt = driver.find_element_by_id(checkbox)
+                            if elmt.get_attribute('checked'):
+                                client.execute_script("arguments[0].click();", elmt)
 
-                        if elmt.get_attribute('checked'):
-                            driver.execute_script("arguments[0].click();", elmt)
+                        client.find_element_by_id("threshold-targetLow-input").clear()
+                        client.find_element_by_id("threshold-targetLow-input").send_keys(
+                            str(contract.yellow_bottom).replace('.', ','))
+                        client.find_element_by_id("threshold-targetLow-input").send_keys(Keys.TAB)
 
-                    driver.find_element_by_id("threshold-targetLow-input").clear()
-                    driver.find_element_by_id("threshold-targetLow-input").send_keys(str(contract.yellow_bottom).replace('.', ','))
-                    driver.find_element_by_id("threshold-targetLow-input").send_keys(Keys.TAB)
+                        actions = ActionChains(client)
+                        actions.send_keys(str(contract.yellow_top).replace('.', ','))
+                        actions.send_keys(Keys.TAB)
 
-                    actions = ActionChains(driver)
-                    actions.send_keys(str(contract.yellow_top).replace('.', ','))
-                    actions.send_keys(Keys.TAB)
+                        actions.send_keys(str(contract.red_bottom).replace('.', ','))
+                        actions.send_keys(Keys.TAB)
 
-                    actions.send_keys(str(contract.red_bottom).replace('.', ','))
-                    actions.send_keys(Keys.TAB)
+                        actions.send_keys(str(contract.red_top).replace('.', ','))
+                        actions.send_keys(Keys.TAB)
 
-                    actions.send_keys(str(contract.red_top).replace('.', ','))
-                    actions.send_keys(Keys.TAB)
+                        actions.perform()
 
-                    actions.perform()
+                        client.find_element_by_id("26-reportSetting-interval-select").send_keys('1\n')
 
-                    driver.find_element_by_id("26-reportSetting-interval-select").send_keys('1\n')
+                        try:
+                            client.find_element_by_id("save-Button").click()
+                            print("clicked")
+                        except:
+                            pass
 
-                    try:
-                        driver.find_element_by_id("save-Button").click()
-                        print("clicked")
-                    except:
-                        pass
+                        time.sleep(4)
 
-                    time.sleep(4)
+                        client.find_element_by_id("reports-print-button").click()
 
-                    driver.find_element_by_id("reports-print-button").click()
+                        time.sleep(15)
 
-                    time.sleep(15)
+                        file = prepare_last_file()
 
-                    file = prepare_last_file()
+                        if file:
+                            print("Got report")
+                            attachments = [file]
+                            medsenger_client.send_message(contract.id, "Отчет FreeStyleLibre", send_from='patient',
+                                                          attachments=attachments)
+                        else:
+                            medsenger_client.send_message(contract.id,
+                                                          "К сожалению, при загрузке отчета FreeStyle Libre что-то пошло не так. Попробуйте отключить и заного подключить интеллектуального агента, а если не поможет - можно обратиться в техническую поддержку support@medsenger.ru",
+                                                          only_doctor=True)
 
-                    if file:
-                        print("Got report")
-                        attachments = [file]
-                        medsenger_client.send_message(contract.id, "Отчет FreeStyleLibre", send_from='patient',
-                                                      attachments=attachments)
+                            with open('index.html', 'w') as df:
+                                df.write(client.page_source)
+
+                        client.back()
+                        client.back()
                     else:
+                        print(status, name, birthday)
                         medsenger_client.send_message(contract.id,
-                                                      "К сожалению, при загрузке отчета FreeStyle Libre что-то пошло не так. Попробуйте отключить и заного подключить интеллектуального агента, а если не поможет - можно обратиться в техническую поддержку support@medsenger.ru",
+                                                      "Ошибка экспорта отчета FreeStyleLibre: пациент еще не открыл доступ к данным.",
                                                       only_doctor=True)
 
-                        with open('index.html', 'w') as df:
-                            df.write(driver.page_source)
+                    contracts.remove(contract)
 
-                    driver.back()
-                    driver.back()
-                else:
-                    print(status, name, birthday)
-                    medsenger_client.send_message(contract.id, "Ошибка экспорта отчета FreeStyleLibre: пациент еще не открыл доступ к данным.", only_doctor=True)
+                    continue_search = True
+                    break
 
-                contracts.remove(contract)
-
-                continue_search = True
+            if not continue_search:
                 break
-
-        if not continue_search:
-            break
+    except Exception as e:
+        client.quit()
+        raise e
+    finally:
+        client.quit()
 
     for contract in contracts:
         medsenger_client.send_message(contract.id,
                                       "Нам не удалось найти пациента в базе LibreView. Попробуйте отключить и заного подключить интеллектуального агента, а если не поможет - можно обратиться в техническую поддержку support@medsenger.ru",
                                       only_doctor=True)
 
-    driver.quit()
 
-
-@sentry
 def find_contract(contracts, name, birthday):
     for contract in contracts:
         if name in contract.name and contract.birthday == birthday:
             return contract
     return None
 
-
-@sentry
 def prepare_last_file():
     for file in os.listdir(DOWNLOAD_PATH):
         print(file)
@@ -272,29 +260,3 @@ def prepare_last_file():
 
             return prepared
     return None
-
-
-@sentry
-def test_browser():
-    driver = create_driver(True)
-
-    driver.get("https://cardio.medsenger.ru")
-
-    print(driver.page_source)
-
-    driver.quit()
-
-
-@sentry
-def test_download():
-    driver = create_driver(True)
-
-    driver.get("https://medsenger.ru/medsenger.pdf")
-
-    time.sleep(5)
-
-    driver.quit()
-
-if __name__ == "__main__":
-    test_browser()
-    test_download()
