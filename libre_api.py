@@ -173,21 +173,32 @@ def send_reports(contracts):
                                 client.execute_script("arguments[0].click();", elmt)
 
                         client.find_element_by_id("threshold-targetLow-input").clear()
+                        for i in range(3):
+                            client.find_element_by_id("threshold-targetLow-input").send_keys(
+                                Keys.BACKSPACE)
                         client.find_element_by_id("threshold-targetLow-input").send_keys(
                             str(contract.yellow_bottom).replace('.', ','))
                         client.find_element_by_id("threshold-targetLow-input").send_keys(Keys.TAB)
 
                         actions = ActionChains(client)
+                        for i in range(3):
+                            actions.send_keys(Keys.BACKSPACE)
                         actions.send_keys(str(contract.yellow_top).replace('.', ','))
                         actions.send_keys(Keys.TAB)
 
+                        for i in range(3):
+                            actions.send_keys(Keys.BACKSPACE)
                         actions.send_keys(str(contract.red_bottom).replace('.', ','))
                         actions.send_keys(Keys.TAB)
 
+                        for i in range(3):
+                            actions.send_keys(Keys.BACKSPACE)
                         actions.send_keys(str(contract.red_top).replace('.', ','))
                         actions.send_keys(Keys.TAB)
 
                         actions.perform()
+
+                        time.sleep(1)
 
                         client.find_element_by_id("26-reportSetting-interval-select").send_keys('1\n')
 
@@ -201,7 +212,7 @@ def send_reports(contracts):
 
                         client.find_element_by_id("reports-print-button").click()
 
-                        time.sleep(15)
+                        time.sleep(10)
 
                         file = prepare_last_file()
 
