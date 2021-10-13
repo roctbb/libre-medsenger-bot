@@ -158,13 +158,13 @@ def send_reports(contracts):
 
                         except:
                             medsenger_client.send_message(contract.id,
-                                                          "Ошибка экспорта отчета FreeStyleLibre: пациент еще не открыл доступ к данным.",
+                                                          "Недостаточно данных для создания отчета.",
                                                           only_doctor=True)
                             contracts.remove(contract)
 
                             continue_search = True
                             client.back()
-                            continue
+                            break
 
                         time.sleep(3)
 
