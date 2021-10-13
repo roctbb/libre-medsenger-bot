@@ -260,6 +260,9 @@ def find_contract(contracts, name, birthday):
     for contract in contracts:
         cname = contract.name.split()[1]
         csurname = contract.name.split()[0]
+
+        print("Name: ", name, "c", cname, csurname)
+
         if cname in name and csurname in name and contract.birthday == birthday:
             return contract
     return None
