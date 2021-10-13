@@ -158,7 +158,7 @@ def send_reports(contracts):
 
                         except:
                             medsenger_client.send_message(contract.id,
-                                                          "Недостаточно данных для создания отчета.",
+                                                          "Ошибка экспорта отчета FreeStyleLibre: недостаточно данных для создания отчета.",
                                                           only_doctor=True)
                             contracts.remove(contract)
 
@@ -235,7 +235,7 @@ def send_reports(contracts):
                                                           attachments=attachments)
                         else:
                             medsenger_client.send_message(contract.id,
-                                                          "К сожалению, при загрузке отчета FreeStyle Libre что-то пошло не так. Попробуйте отключить и заного подключить интеллектуального агента, а если не поможет - можно обратиться в техническую поддержку support@medsenger.ru",
+                                                          "Ошибка экспорта отчета FreeStyleLibre: не удалось экспортировать отчет, возможно, данных пока слишком мало.",
                                                           only_doctor=True)
 
                             with open('index.html', 'w') as df:
