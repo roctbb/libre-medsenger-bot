@@ -151,8 +151,20 @@ def send_reports(contracts):
 
                         time.sleep(1)
 
-                        client.find_element_by_id("interval-select").send_keys("1\n")
-                        client.find_element_by_id("pastGlucoseCard-report-button").click()
+                        try:
+
+                            client.find_element_by_id("interval-select").send_keys("1\n")
+                            client.find_element_by_id("pastGlucoseCard-report-button").click()
+
+                        except:
+                            medsenger_client.send_message(contract.id,
+                                                          "Ошибка экспорта отчета FreeStyleLibre: пациент еще не открыл доступ к данным.",
+                                                          only_doctor=True)
+                            contracts.remove(contract)
+
+                            continue_search = True
+                            client.back()
+                            continue
 
                         time.sleep(3)
 
