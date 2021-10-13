@@ -62,7 +62,7 @@ def init(data):
     contract = Contract.query.filter_by(id=data.get('contract_id')).first()
 
     job = q.enqueue_call(
-        func=libre_api.register_user, args=(contract, ), result_ttl=5000
+        func=libre_api.register_user, args=(contract, )
     )
 
     print(job.get_id())
@@ -91,7 +91,7 @@ def get_report(args, form):
     contract = Contract.query.filter_by(id=args.get('contract_id')).first()
 
     job = q.enqueue_call(
-        func=libre_api.send_reports, args=([contract], ), result_ttl=5000
+        func=libre_api.send_reports, args=([contract], )
     )
 
     print(job.get_id())
@@ -107,7 +107,7 @@ def message(data):
 def sender(app):
     with app.app_context():
         job = q.enqueue_call(
-            func=libre_api.send_reports, args=(Contract.query.all(),), result_ttl=5000
+            func=libre_api.send_reports, args=(Contract.query.all(),)
         )
 
         print(job.get_id())
