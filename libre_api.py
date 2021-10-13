@@ -137,11 +137,12 @@ def send_reports(contracts):
             for row in table.find_elements_by_tag_name('tr'):
                 cells = row.find_elements_by_tag_name('td')
 
-                name = cells[1].text + " " + cells[0].text
+                name = cells[0].text
+                surname = cells[1].text
                 birthday = cells[2].text
 
                 status = cells[7]
-                contract = find_contract(contracts, name, birthday)
+                contract = find_contract(contracts, name, surname, birthday)
 
                 if contract:
                     print("Found contract")
@@ -256,9 +257,9 @@ def send_reports(contracts):
                                       only_doctor=True)
 
 
-def find_contract(contracts, name, birthday):
+def find_contract(contracts, name, surname, birthday):
     for contract in contracts:
-        if name in contract.name and contract.birthday == birthday:
+        if name in contract.name and surname in contract.name and contract.birthday == birthday:
             return contract
     return None
 
