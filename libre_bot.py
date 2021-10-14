@@ -110,7 +110,7 @@ def sender(app):
             func=libre_api.send_reports, args=(Contract.query.all(),)
         )
 
-        print(job.get_id())
+        print("Full report job:", job.get_id())
 
 if __name__ == "__main__":
     app.run(HOST, PORT, debug=API_DEBUG)
