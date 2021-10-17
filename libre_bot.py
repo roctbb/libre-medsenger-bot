@@ -76,6 +76,7 @@ def remove(data):
     c = Contract.query.filter_by(id=data.get('contract_id')).first()
     if c:
         db.session.delete(c)
+        db.session.commit()
     return "ok"
 
 
