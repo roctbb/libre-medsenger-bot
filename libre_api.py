@@ -152,10 +152,13 @@ def send_reports(contracts):
                         time.sleep(1)
 
                         try:
-
                             client.find_element_by_id("interval-select").send_keys("1\n")
-                            client.find_element_by_id("pastGlucoseCard-report-button").click()
 
+                            elm = client.find_element_by_id("pastGlucoseCard-report-button")
+                            if not elm:
+                                elm = client.find_element_by_id("newGlucose-report-button")
+
+                            elm.click()
                         except Exception as e:
                             print(e)
                             medsenger_client.send_message(contract.id,
