@@ -156,7 +156,8 @@ def send_reports(contracts):
                             client.find_element_by_id("interval-select").send_keys("1\n")
                             client.find_element_by_id("pastGlucoseCard-report-button").click()
 
-                        except:
+                        except Exception as e:
+                            print(e)
                             medsenger_client.send_message(contract.id,
                                                           "Ошибка экспорта отчета FreeStyleLibre: недостаточно данных для создания отчета.",
                                                           only_doctor=True)
