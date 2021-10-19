@@ -157,7 +157,10 @@ def send_reports(contracts):
                             try:
                                 elm = client.find_element_by_id("pastGlucoseCard-report-button")
                             except:
-                                elm = client.find_element_by_id("newGlucose-report-button")
+                                try:
+                                    elm = client.find_element_by_id("newGlucose-report-button")
+                                except:
+                                    elm = client.find_element_by_id("newGlucose-glucoseReports-button")
 
                             elm.click()
                         except Exception as e:
