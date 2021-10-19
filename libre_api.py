@@ -154,8 +154,9 @@ def send_reports(contracts):
                         try:
                             client.find_element_by_id("interval-select").send_keys("1\n")
 
-                            elm = client.find_element_by_id("pastGlucoseCard-report-button")
-                            if not elm:
+                            try:
+                                elm = client.find_element_by_id("pastGlucoseCard-report-button")
+                            except:
                                 elm = client.find_element_by_id("newGlucose-report-button")
 
                             elm.click()
