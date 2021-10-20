@@ -44,6 +44,9 @@ def create_driver(headless=HEADLESS):
 
 def create_client():
     driver = create_driver()
+
+    print("created driver...")
+
     driver.get("https://www.libreview.ru/")
     time.sleep(2)
 
@@ -122,6 +125,8 @@ def register_user(contract):
                                   only_patient=True)
 
 def send_reports(contracts):
+    print("starting task...")
+
     client = create_client()
 
     try:
