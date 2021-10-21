@@ -188,14 +188,23 @@ def send_reports(contracts):
                         checkboxes = ['20-reportSetting-toggle-checkbox', '16-reportSetting-toggle-checkbox',
                                       '5-reportSetting-toggle-checkbox',
                                       '1-reportSetting-toggle-checkbox', '8-reportSetting-toggle-checkbox',
-                                      '10-reportSetting-toggle-checkbox',
-                                      '18-reportSetting-toggle-checkbox', '14-reportSetting-toggle-checkbox']
+                                      '18-reportSetting-toggle-checkbox']
 
                         for checkbox in checkboxes:
                             elmt = client.find_element_by_id(checkbox)
 
                             if elmt.get_attribute('checked'):
                                 client.execute_script("arguments[0].click();", elmt)
+
+                        checkboxes = ['10-reportSetting-toggle-checkbox', '14-reportSetting-toggle-checkbox']
+
+                        for checkbox in checkboxes:
+                            elmt = client.find_element_by_id(checkbox)
+
+                            if not elmt.get_attribute('checked'):
+                                client.execute_script("arguments[0].click();", elmt)
+
+
 
                         client.find_element_by_id("threshold-targetLow-input").clear()
                         for i in range(3):
@@ -226,6 +235,8 @@ def send_reports(contracts):
                         time.sleep(1)
 
                         client.find_element_by_id("26-reportSetting-interval-select").send_keys('1\n')
+                        client.find_element_by_id("10-reportSetting-interval-select").send_keys('1\n')
+                        client.find_element_by_id("14-reportSetting-interval-select").send_keys('1\n')
 
                         try:
                             client.find_element_by_id("save-Button").click()

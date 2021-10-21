@@ -116,10 +116,10 @@ def save_settings(args, form):
 @verify_args
 def get_report(args, form):
     contract = Contract.query.filter_by(id=args.get('contract_id')).first()
-    # update_info(contract)
-    # db.session.commit()
-    #
-    # contract = Contract.query.filter_by(id=args.get('contract_id')).first()
+    update_info(contract)
+    db.session.commit()
+
+    contract = Contract.query.filter_by(id=args.get('contract_id')).first()
     job = q.enqueue_call(
         func=libre_api.send_reports, args=([contract], )
     )
