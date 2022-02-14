@@ -327,5 +327,6 @@ def prepare_last_file():
     return None
 
 if __name__ == "__main__":
-    HEADLESS = False
     create_client()
+
+    print("I've done")
