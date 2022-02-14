@@ -5,6 +5,7 @@ from medsenger_api import AgentApiClient, prepare_file
 from selenium.webdriver.support.ui import Select
 from sentry_sdk.integrations.rq import RqIntegration
 from config import *
+from mail_api import get_code
 import sentry_sdk
 
 import time
@@ -12,6 +13,8 @@ import os
 
 medsenger_client = AgentApiClient(host=MAIN_HOST, api_key=API_KEY, debug=API_DEBUG)
 sentry_sdk.init(dsn=SENTRY_DSN, traces_sample_rate=0.0)
+
+
 
 
 def create_driver(headless=HEADLESS):
@@ -52,7 +55,6 @@ def create_client():
 
     try:
         driver.find_element_by_id("submit-button").click()
-
         time.sleep(2)
     except:
         pass
@@ -63,8 +65,19 @@ def create_client():
         driver.find_element_by_id("loginForm-submit-button").click()
 
         time.sleep(1)
+
+        driver.find_element_by_id("twoFactor-step1-next-button").click()
+
+        time.sleep(20)
+
+        code = get_code()
+
+        driver.find_element_by_id("twoFactor-step2-code-input").send_keys(code)
+        driver.find_element_by_id("twoFactor-step2-next-button").click()
     except:
         pass
+
+    time.sleep(1)
 
     driver.find_element_by_id("main-header-dashboard-icon").click()
 
@@ -312,3 +325,7 @@ def prepare_last_file():
 
             return prepared
     return None
+
+if __name__ == "__main__":
+    HEADLESS = False
+    create_client()

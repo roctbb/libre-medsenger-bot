@@ -11,5 +11,3 @@ def test_get_reports():
 def test_prepare_last_file():
     prepare_last_file()
 
-if __name__ == "__main__":
-    test_create_client()
