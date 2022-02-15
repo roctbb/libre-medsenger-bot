@@ -1,20 +1,38 @@
 from config import *
 from redis import Redis
-from rq import Worker, Queue, Connection
 import sentry_sdk
-from sentry_sdk.integrations.rq import RqIntegration
-from libre_api import create_client
+import json
+from manage import *
+from libre_api import create_client, register_user, send_reports
 
-sentry_sdk.init(
-    dsn=SENTRY_DSN,
-    integrations=[RqIntegration()])
-
-listen = ['libre']
-conn = Redis()
-browser = create_client()
 
 if __name__ == '__main__':
-    with Connection(conn):
-        worker = Worker(list(map(Queue, listen)))
-        worker.work()
+    with app.app_context():
+        browser = create_client()
+        conn = Redis()
+
+        channel = 'libre'
+        p = conn.pubsub()
+        p.subscribe(channel)
+
+        while True:
+            message = p.get_message()
+            if message and not message['data'] == 1:
+                try:
+                    print("QUEUE: got task")
+                    message = message['data'].decode('utf-8')
+                    print(message)
+                    payload = json.loads(message)
+
+                    if payload['cmd'] == "register":
+                        register_user(payload['id'], browser)
+                    if payload['cmd'] == "report":
+                        send_reports(payload['ids'], browser)
+
+                    print("QUEUE: task ready")
+                except Exception as e:
+                    print("QUEUE: task error")
+                    print(e)
+
+
 

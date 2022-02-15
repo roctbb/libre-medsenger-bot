@@ -5,6 +5,7 @@ from medsenger_api import AgentApiClient, prepare_file
 from selenium.webdriver.support.ui import Select
 from sentry_sdk.integrations.rq import RqIntegration
 from config import *
+from models import *
 from mail_api import get_code
 import sentry_sdk
 
@@ -14,8 +15,6 @@ import os
 
 medsenger_client = AgentApiClient(host=MAIN_HOST, api_key=API_KEY, debug=API_DEBUG)
 sentry_sdk.init(dsn=SENTRY_DSN, traces_sample_rate=0.0)
-
-
 
 
 def create_driver(headless=HEADLESS):
@@ -92,15 +91,17 @@ def create_client():
 
     return driver
 
-def register_user(contract):
-    from libre_queue import browser
-    client = browser
+def register_user(contract, client):
+    contract = Contract.query.filter_by(id=contract).first()
 
     client.get("https://www.libreview.ru/dashboard")
     time.sleep(2)
 
-    if client.find_element_by_id("loginForm-submit-button"):
+    try:
+        client.find_element_by_id("loginForm-submit-button")
         make_login(client)
+    except:
+        pass
 
     try:
         table = client.find_element_by_tag_name('tbody')
@@ -139,10 +140,7 @@ def register_user(contract):
         client.find_element_by_id("add-patient-modal-send-button").click()
         time.sleep(0.5)
     except Exception as e:
-        client.quit()
         raise e
-    finally:
-        client.quit()
 
     medsenger_client.send_message(contract.id,
                                   "Мы добавили информацию о пациенте в базу LibreView и запросили доступ к данным мониторинга. Как только пациент выдаст доступ, Вы будете автоматически получать ежедневные отчеты по мониторингу глюкозы в чат.",
@@ -151,25 +149,27 @@ def register_user(contract):
                                   "Мы запросили доступ к данным глюкометра FreeStyle Libre. Пожалуйста, проверьте электронную почту и предоставьте доступ. После этого Ваш врач сможет автоматически получать отчеты об уровне глюкозы.",
                                   only_patient=True)
 
-def send_reports(contracts):
+def send_reports(contracts, client):
     print("starting task...")
 
-    from libre_queue import browser
-    client = browser
-
-    client.get("https://www.libreview.ru/dashboard")
-    time.sleep(2)
-
-    if client.find_element_by_id("loginForm-submit-button"):
-        make_login(client)
-
     try:
-        contracts = list(contracts)
+        contracts = Contract.query.filter(Contract.id.in_(contracts)).all()
 
         print("Got client")
 
         while True:
+
+            client.get("https://www.libreview.ru/dashboard")
+            time.sleep(3)
+
+            try:
+                client.find_element_by_id("loginForm-submit-button")
+                make_login(client)
+            except:
+                pass
+
             continue_search = False
+
             table = client.find_element_by_tag_name('tbody')
             print("Got table")
 
@@ -268,9 +268,15 @@ def send_reports(contracts):
 
                         time.sleep(1)
 
-                        client.find_element_by_id("26-reportSetting-interval-select").send_keys('1\n')
-                        client.find_element_by_id("10-reportSetting-interval-select").send_keys('1\n')
-                        client.find_element_by_id("14-reportSetting-interval-select").send_keys('1\n')
+                        try:
+                            client.find_element_by_id("26-reportSetting-interval-select").send_keys('1\n')
+                            time.sleep(0.5)
+                            client.find_element_by_id("10-reportSetting-interval-select").send_keys('1\n')
+                            time.sleep(0.5)
+                            client.find_element_by_id("14-reportSetting-interval-select").send_keys('1\n')
+                            time.sleep(0.5)
+                        except:
+                            pass
 
                         try:
                             client.find_element_by_id("save-Button").click()
@@ -298,9 +304,6 @@ def send_reports(contracts):
 
                             with open('index.html', 'w') as df:
                                 df.write(client.page_source)
-
-                        client.back()
-                        client.back()
                     else:
                         print(status, name, birthday)
                         medsenger_client.send_message(contract.id,
@@ -315,10 +318,7 @@ def send_reports(contracts):
             if not continue_search:
                 break
     except Exception as e:
-        client.quit()
         raise e
-    finally:
-        client.quit()
 
     for contract in contracts:
         medsenger_client.send_message(contract.id,
@@ -330,8 +330,6 @@ def find_contract(contracts, name, birthday):
     for contract in contracts:
         cname = contract.name.split()[1]
         csurname = contract.name.split()[0]
-
-        print("Name: ", name, "c", cname, csurname)
 
         if cname in name and csurname in name and contract.birthday == birthday:
             return contract

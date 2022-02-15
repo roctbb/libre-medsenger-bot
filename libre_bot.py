@@ -3,17 +3,16 @@ from manage import *
 from medsenger_api import AgentApiClient
 from helpers import *
 from models import *
+from redis import Redis
 
-from rq import Queue
-from libre_queue import conn
-
-q = Queue('libre', connection=conn)
 medsenger_api = AgentApiClient(API_KEY, MAIN_HOST, AGENT_ID, API_DEBUG)
+conn = Redis()
 
 
 @app.route('/debug-sentry')
 def trigger_error():
     division_by_zero = 1 / 0
+
 
 @app.route('/')
 def index():
@@ -31,6 +30,7 @@ def status(data):
 
     return jsonify(answer)
 
+
 def update_info(contract):
     info = medsenger_api.get_patient_info(contract.id)
 
@@ -41,6 +41,7 @@ def update_info(contract):
     D = D.replace('0', '')
     contract.birthday = '/'.join((D, M, Y))
     contract.email = info.get('email')
+
 
 @app.route('/init', methods=['POST'])
 @verify_json
@@ -62,11 +63,14 @@ def init(data):
 
     contract = Contract.query.filter_by(id=data.get('contract_id')).first()
 
-    job = q.enqueue_call(
-        func=libre_api.register_user, args=(contract, )
-    )
+    cmd = {
+        "cmd": "register",
+        "id": contract.id
+    }
 
-    print(job.get_id())
+    conn.publish('libre', json.dumps(cmd))
+
+    print(f"Sent cmd: {cmd}")
 
     return "ok"
 
@@ -92,6 +96,7 @@ def get_settings(args, form):
 
     return render_template('settings.html', contract=contract)
 
+
 @app.route('/settings', methods=['POST'])
 @verify_args
 def save_settings(args, form):
@@ -112,6 +117,7 @@ def save_settings(args, form):
 
     return """<strong>Спасибо, окно можно закрыть</strong><script>window.parent.postMessage('close-modal-success','*');</script>"""
 
+
 @app.route('/report', methods=['GET'])
 @verify_args
 def get_report(args, form):
@@ -119,12 +125,15 @@ def get_report(args, form):
     update_info(contract)
     db.session.commit()
 
-    contract = Contract.query.filter_by(id=args.get('contract_id')).first()
-    job = q.enqueue_call(
-        func=libre_api.send_reports, args=([contract], )
-    )
+    contract = int(args.get('contract_id'))
 
-    print(job.get_id())
+    cmd = {
+        "cmd": "report",
+        "ids": [contract]
+    }
+
+    conn.publish('libre', json.dumps(cmd))
+
 
     return "Запущен процесс создания отчета, он придет в чат через минуту."
 
@@ -134,13 +143,20 @@ def get_report(args, form):
 def message(data):
     return "ok"
 
+
 def sender(app):
     with app.app_context():
-        job = q.enqueue_call(
-            func=libre_api.send_reports, args=(Contract.query.all(), )
-        )
+        ids = map(lambda x: x.id, Contract.query.all())
 
-        print("Full report job:", job.get_id())
+        cmd = {
+            "cmd": "report",
+            "ids": ids
+        }
+
+        conn.publish('libre', json.dumps(cmd))
+
+        print(f"Sent cmd: {cmd}")
+
 
 if __name__ == "__main__":
     app.run(HOST, PORT, debug=API_DEBUG)
