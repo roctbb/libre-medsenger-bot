@@ -64,9 +64,11 @@ def make_login(driver):
     except:
         pass
 
-    time.sleep(1)
-
-    driver.find_element_by_id("main-header-dashboard-icon").click()
+    time.sleep(2)
+    try:
+        driver.find_element_by_id("main-header-dashboard-icon").click()
+    except:
+        pass
 
     time.sleep(1)
 
