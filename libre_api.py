@@ -8,6 +8,7 @@ from config import *
 from mail_api import get_code
 import sentry_sdk
 
+
 import time
 import os
 
@@ -91,7 +92,9 @@ def create_client():
 
     return driver
 
-def register_user(contract, client):
+def register_user(contract):
+    from libre_queue import browser
+    client = browser
 
     client.get("https://www.libreview.ru/dashboard")
     time.sleep(2)
@@ -148,8 +151,11 @@ def register_user(contract, client):
                                   "Мы запросили доступ к данным глюкометра FreeStyle Libre. Пожалуйста, проверьте электронную почту и предоставьте доступ. После этого Ваш врач сможет автоматически получать отчеты об уровне глюкозы.",
                                   only_patient=True)
 
-def send_reports(contracts, client):
+def send_reports(contracts):
     print("starting task...")
+
+    from libre_queue import browser
+    client = browser
 
     client.get("https://www.libreview.ru/dashboard")
     time.sleep(2)
