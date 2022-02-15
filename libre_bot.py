@@ -6,9 +6,11 @@ from models import *
 
 from rq import Queue
 from libre_queue import conn
+from libre_api import create_client
 
 q = Queue('libre', connection=conn)
 medsenger_api = AgentApiClient(API_KEY, MAIN_HOST, AGENT_ID, API_DEBUG)
+browser = create_client()
 
 
 @app.route('/debug-sentry')
@@ -63,7 +65,7 @@ def init(data):
     contract = Contract.query.filter_by(id=data.get('contract_id')).first()
 
     job = q.enqueue_call(
-        func=libre_api.register_user, args=(contract, )
+        func=libre_api.register_user, args=(contract, browser)
     )
 
     print(job.get_id())
@@ -121,7 +123,7 @@ def get_report(args, form):
 
     contract = Contract.query.filter_by(id=args.get('contract_id')).first()
     job = q.enqueue_call(
-        func=libre_api.send_reports, args=([contract], )
+        func=libre_api.send_reports, args=([contract], browser)
     )
 
     print(job.get_id())
@@ -137,7 +139,7 @@ def message(data):
 def sender(app):
     with app.app_context():
         job = q.enqueue_call(
-            func=libre_api.send_reports, args=(Contract.query.all(),)
+            func=libre_api.send_reports, args=(Contract.query.all(), browser)
         )
 
         print("Full report job:", job.get_id())

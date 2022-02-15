@@ -45,20 +45,7 @@ def create_driver(headless=HEADLESS):
 
     return driver
 
-def create_client():
-    driver = create_driver()
-
-    print("created driver...")
-
-    driver.get("https://www.libreview.ru/")
-    time.sleep(2)
-
-    try:
-        driver.find_element_by_id("submit-button").click()
-        time.sleep(2)
-    except:
-        pass
-
+def make_login(driver):
     try:
         driver.find_element_by_id("loginForm-email-input").send_keys(LIBRE_LOGIN)
         driver.find_element_by_id("loginForm-password-input").send_keys(LIBRE_PASS)
@@ -83,10 +70,32 @@ def create_client():
 
     time.sleep(1)
 
+def create_client():
+    driver = create_driver()
+
+    print("created driver...")
+
+    driver.get("https://www.libreview.ru/")
+    time.sleep(2)
+
+    try:
+        driver.find_element_by_id("submit-button").click()
+        time.sleep(2)
+    except:
+        pass
+
+
+    make_login(driver)
+
     return driver
 
-def register_user(contract):
-    client = create_client()
+def register_user(contract, client):
+
+    client.get("https://www.libreview.ru/dashboard")
+    time.sleep(2)
+
+    if client.find_element_by_id("loginForm-submit-button"):
+        make_login(client)
 
     try:
         table = client.find_element_by_tag_name('tbody')
@@ -137,10 +146,14 @@ def register_user(contract):
                                   "Мы запросили доступ к данным глюкометра FreeStyle Libre. Пожалуйста, проверьте электронную почту и предоставьте доступ. После этого Ваш врач сможет автоматически получать отчеты об уровне глюкозы.",
                                   only_patient=True)
 
-def send_reports(contracts):
+def send_reports(contracts, client):
     print("starting task...")
 
-    client = create_client()
+    client.get("https://www.libreview.ru/dashboard")
+    time.sleep(2)
+
+    if client.find_element_by_id("loginForm-submit-button"):
+        make_login(client)
 
     try:
         contracts = list(contracts)
