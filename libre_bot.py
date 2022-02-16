@@ -146,7 +146,7 @@ def message(data):
 
 def sender(app):
     with app.app_context():
-        ids = map(lambda x: x.id, Contract.query.all())
+        ids = list(map(lambda x: x.id, Contract.query.all()))
 
         cmd = {
             "cmd": "report",
