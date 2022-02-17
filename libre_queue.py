@@ -8,6 +8,8 @@ from libre_api import create_client, register_user, send_reports
 
 if __name__ == '__main__':
     with app.app_context():
+        print("queue started...")
+
         browser = create_client()
         conn = Redis()
 

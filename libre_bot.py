@@ -146,6 +146,8 @@ def message(data):
 
 def sender(app):
     with app.app_context():
+        print("running sender...")
+
         ids = list(map(lambda x: x.id, Contract.query.all()))
 
         cmd = {
