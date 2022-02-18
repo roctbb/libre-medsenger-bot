@@ -145,6 +145,7 @@ def message(data):
 
 
 def sender(app):
+    print("got job")
     with app.app_context():
         print("running sender...")
 
