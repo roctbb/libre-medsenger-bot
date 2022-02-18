@@ -17,8 +17,7 @@ if __name__ == '__main__':
         p = conn.pubsub()
         p.subscribe(channel)
 
-        while True:
-            message = p.get_message()
+        for message in p.listen():
             if message and not message['data'] == 1:
                 try:
                     print("QUEUE: got task")
