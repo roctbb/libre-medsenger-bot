@@ -165,8 +165,12 @@ def send_reports(contracts, client):
             try:
                 client.find_element_by_id("loginForm-submit-button")
                 make_login(client)
+                print("relogin")
+                time.sleep(1)
+                client.get("https://www.libreview.ru/dashboard")
             except:
                 pass
+            time.sleep(1)
 
             continue_search = False
 
