@@ -37,8 +37,8 @@ def update_info(contract):
     contract.name = info.get('name')
 
     D, M, Y = info.get('birthday').split('.')
-    M = M.replace('0', '')
-    D = D.replace('0', '')
+    M = M.lstrip('0')
+    D = D.lstrip('0')
     contract.birthday = '/'.join((D, M, Y))
     contract.email = info.get('email')
 
