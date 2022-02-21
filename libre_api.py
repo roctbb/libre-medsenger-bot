@@ -322,6 +322,8 @@ def send_reports(contracts, client):
             if not continue_search:
                 break
     except Exception as e:
+        with open('index.html', 'w') as df:
+            df.write(client.page_source)
         raise e
 
     for contract in contracts:
