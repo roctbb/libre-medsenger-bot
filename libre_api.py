@@ -61,14 +61,14 @@ def make_login(driver):
 
         driver.find_element_by_id("twoFactor-step2-code-input").send_keys(code)
         driver.find_element_by_id("twoFactor-step2-next-button").click()
-    except:
-        pass
+    except Exception as e:
+        print("login error:", e)
 
     time.sleep(2)
     try:
         driver.find_element_by_id("main-header-dashboard-icon").click()
-    except:
-        pass
+    except Exception as e:
+        print("login error:", e)
 
     time.sleep(1)
 
