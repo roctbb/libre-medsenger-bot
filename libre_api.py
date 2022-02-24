@@ -108,9 +108,7 @@ def register_user(contract, client):
 
         for row in table.find_elements_by_tag_name('tr'):
             cells = row.find_elements_by_tag_name('td')
-            name = cells[1].text + " " + cells[0].text
-            birthday = cells[2].text
-            if find_contract([contract], name, birthday):
+            if contract.email == cells[8].text:
                 medsenger_client.send_message(contract.id,
                                               "Пациент найден в базе LibreView для Вашего мед. учреждения. Теперь мы сможем ежедневно автоматически присылать Вам отчеты о мониторинге. Запросить отчет в произвольное время можно в меню Действия.",
                                               only_doctor=True)
@@ -180,11 +178,9 @@ def send_reports(contracts, client):
             for row in table.find_elements_by_tag_name('tr'):
                 cells = row.find_elements_by_tag_name('td')
 
-                name = cells[0].text + " " + cells[1].text
-                birthday = cells[2].text
-
                 status = cells[7]
-                contract = find_contract(contracts, name, birthday)
+
+                contract = find_contract(contracts, cells[8].text)
 
                 if contract:
                     print("Found contract")
@@ -332,14 +328,9 @@ def send_reports(contracts, client):
                                       only_doctor=True)
 
 
-def find_contract(contracts, name, birthday):
+def find_contract(contracts, email):
     for contract in contracts:
-        cname = contract.name.split()[1]
-        csurname = contract.name.split()[0]
-
-        print("search", name, cname, contract.birthday, birthday)
-
-        if cname in name and csurname in name and contract.birthday == birthday:
+        if email == contract.email:
             return contract
     return None
 
