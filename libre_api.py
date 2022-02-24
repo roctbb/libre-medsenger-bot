@@ -161,7 +161,8 @@ def send_reports(contracts, client):
             time.sleep(3)
 
             try:
-                client.find_element_by_id("loginForm-submit-button")
+                client.find_element_by_id("modal-close").click()
+                time.sleep(1)
                 make_login(client)
                 print("relogin")
                 time.sleep(1)
