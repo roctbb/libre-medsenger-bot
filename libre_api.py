@@ -161,14 +161,20 @@ def send_reports(contracts, client):
             time.sleep(3)
 
             try:
-                client.find_element_by_id("modal-close").click()
+                try:
+                    client.find_element_by_id("modal-close").click()
+                except:
+                    pass
+
+                client.find_element_by_id("loginForm-email-input")
+
                 time.sleep(1)
                 make_login(client)
                 print("relogin")
                 time.sleep(1)
                 client.get("https://www.libreview.ru/dashboard")
-            except:
-                pass
+            except Exception as e:
+                print(e)
             time.sleep(1)
 
             continue_search = False
