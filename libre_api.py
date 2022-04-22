@@ -54,13 +54,33 @@ def make_login(driver):
         except:
             print("no consent")
 
+        try:
+            driver.find_element_by_id("submit-button").click()
+        except:
+            pass
+
         time.sleep(1)
 
         driver.find_element_by_id("loginForm-email-input").send_keys(LIBRE_LOGIN)
         driver.find_element_by_id("loginForm-password-input").send_keys(LIBRE_PASS)
         driver.find_element_by_id("loginForm-submit-button").click()
 
-        time.sleep(1)
+        time.sleep(2)
+
+        try:
+            driver.find_element_by_id("updated-close-button").click()
+            time.sleep(0.5)
+            driver.find_element_by_id("wizard-actionBar-next-button").click()
+            time.sleep(0.5)
+            driver.find_element_by_id("continueReading-accept-button").click()
+            time.sleep(0.5)
+            driver.find_element_by_id("updated-close-button").click()
+            time.sleep(0.5)
+            driver.find_element_by_id("continueReading-accept-button").click()
+        except:
+            pass
+
+        time.sleep(0.5)
 
         driver.find_element_by_id("twoFactor-step1-next-button").click()
 
