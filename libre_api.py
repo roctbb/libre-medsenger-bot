@@ -47,6 +47,13 @@ def create_driver(headless=HEADLESS):
 
 def make_login(driver):
     try:
+        try:
+            driver.find_element_by_id("truste-consent-button").click()
+        except:
+            print("no consent")
+
+        time.sleep(1)
+
         driver.find_element_by_id("loginForm-email-input").send_keys(LIBRE_LOGIN)
         driver.find_element_by_id("loginForm-password-input").send_keys(LIBRE_PASS)
         driver.find_element_by_id("loginForm-submit-button").click()
