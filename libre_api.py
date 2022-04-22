@@ -47,6 +47,8 @@ def create_driver(headless=HEADLESS):
 
 def make_login(driver):
     try:
+        print("starting login")
+
         try:
             driver.find_element_by_id("truste-consent-button").click()
         except:
