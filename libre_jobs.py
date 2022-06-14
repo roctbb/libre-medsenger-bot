@@ -9,8 +9,4 @@ scheduler = BlockingScheduler()
 scheduler.add_job(lambda:print("ping"), 'interval', hours=1)
 scheduler.add_job(sender, 'cron', hour=9, minute=0, second=0, args=(app, ))
 
-while True:
-    try:
-        scheduler.start()
-    except Exception as e:
-        print(e)
+scheduler.start()
